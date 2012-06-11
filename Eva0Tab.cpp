@@ -59,13 +59,16 @@ enum Eva0TabEvents {
   button_SetTargetConf_L,
   button_ShowTargetConf_L,
   button_Plan,
-  button_Execute
+  button_Execute,
+  checkbox_Smooth_L,
+  checkbox_Smooth_R
 };
 
 // Handlers for UI changes
 BEGIN_EVENT_TABLE(Eva0Tab, wxPanel)
 EVT_COMMAND( wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, Eva0Tab::OnButton )
 EVT_COMMAND( wxID_ANY, wxEVT_COMMAND_RADIOBOX_SELECTED, Eva0Tab::OnRadio )
+EVT_COMMAND( wxID_ANY, wxEVT_COMMAND_CHECKBOX_CLICKED, Eva0Tab::OnCheckbox )
 END_EVENT_TABLE ()
 
 // Class constructor for the tab: Each tab will be a subclass of RSTTab
@@ -92,6 +95,10 @@ Eva0Tab::Eva0Tab(wxWindow *parent,
 		 const wxPoint& pos, 
 		 const wxSize& size, 
 		 long style) : RSTTab(parent, id, pos, size, style) {
+
+  // ** Initialize a few things **
+  mSmooth_L = false;
+  mSmooth_R = false;
 
   Eva0TabSizer = new wxBoxSizer( wxHORIZONTAL );
 
@@ -148,6 +155,17 @@ Eva0Tab::Eva0Tab(wxWindow *parent,
 		     1,
 		     wxALIGN_NOT,
 		     0 );  
+
+
+  // Gradient Checkboxes
+  wxBoxSizer *SmoothSizer = new wxBoxSizer( wxHORIZONTAL );
+  SmoothSizer->Add( new wxCheckBox( this, checkbox_Smooth_L, _T("Smooth Left") ), 
+		    1, wxALIGN_NOT );
+  SmoothSizer->Add( new wxCheckBox( this, checkbox_Smooth_R, _T("Smooth Right") ),
+		    1, wxALIGN_NOT );
+ 
+  // Add sizers to GBoxSizer 
+  planBoxSizer->Add( SmoothSizer, 1, wxALIGN_NOT, 0 );
 
   wxBoxSizer *planButtonSizer = new wxBoxSizer( wxHORIZONTAL );
   planButtonSizer->Add( new wxButton(this, button_Plan, wxT("Plan")),
@@ -332,6 +350,26 @@ void Eva0Tab::OnButton( wxCommandEvent &_evt ) {
   } // end of button switch
 
 }
+
+/**
+ * @function OnCheckbox
+ */
+void Eva0Tab::OnCheckbox( wxCommandEvent &_evt ) {
+
+  int checkbox_num = _evt.GetId();
+  
+  switch( checkbox_num ) {
+
+  case checkbox_Smooth_L: {
+    mSmooth_L = (bool) _evt.GetSelection();
+  } break;
+  case checkbox_Smooth_R: {
+    mSmooth_R = (bool) _evt.GetSelection();
+  } break;
+
+  }
+}
+
 
 /**
  * @function ExecutePath

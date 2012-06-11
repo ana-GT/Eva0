@@ -76,6 +76,7 @@ public:
   bool ArmPlanning();
   void OnRadio( wxCommandEvent &_evt );
   void OnButton( wxCommandEvent &_evt );
+  void OnCheckbox( wxCommandEvent &_evt );
   void ExecutePath( );
   void HomogenizePath( std::list<Eigen::VectorXd> _inputPath,
 		       std::list<Eigen::VectorXd> &_outputPath );
@@ -111,8 +112,11 @@ public:
   int mBase_Link;
   eConfMode mConfMode;
 
+  // ** Info variables**
   std::list<Eigen::VectorXd> mPath_R;
   std::list<Eigen::VectorXd> mPath_L;
+  bool mSmooth_L;
+  bool mSmooth_R;
 
   DECLARE_DYNAMIC_CLASS(Eva0Tab)
     DECLARE_EVENT_TABLE()

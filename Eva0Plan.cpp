@@ -11,6 +11,7 @@
 #include <GUI/RSTFrame.h>
 
 #include "Eva0Tab.h"
+#include <Tools/PathShortener.h>
 
 /**
  * @function ArmPlanning  
@@ -33,6 +34,13 @@ bool Eva0Tab::ArmPlanning() {
 			      5000 );
     if( la == true ) {
       printf("** Found a path with %d nodes \n", mPath_L.size() );
+      if( mSmooth_L == true ) {
+	printf("** Shortening Left Arm plan ** \n");
+	PathShortener ps( world, mRobotId, mLA_Links );
+	ps.shortenPath( mPath_L );
+	printf( "** Shortened path with %d nodes \n", mPath_L.size() );
+      }
+
     } else {
       printf( "** Did not find a path \n" );
     }
@@ -54,6 +62,13 @@ bool Eva0Tab::ArmPlanning() {
 			      5000 );
     if( ra == true ) {
       printf("** Found a path with %d nodes \n", mPath_R.size() );
+      if( mSmooth_R == true ) {
+	printf("** Shortening Right Arm plan ** \n");
+	PathShortener ps( world, mRobotId, mRA_Links );
+	ps.shortenPath( mPath_R );
+	printf( "** Shortened path with %d nodes \n", mPath_R.size() );	
+      }
+
     } else {
       printf( "** Did not find a path \n" );
     }
@@ -85,6 +100,16 @@ bool Eva0Tab::ArmPlanning() {
 			      5000 );    
     if( ra == true && la == true ) {
       printf( " ** Found paths for both left (%d) and right(%d) arms \n", mPath_L.size(), mPath_R.size() );
+      if( mSmooth_L == true ) {
+	printf("** Shortening Left Arm plan ** \n");
+	PathShortener ps1( world, mRobotId, mLA_Links );
+	ps1.shortenPath( mPath_L );
+	printf( "** Shortened path with %d nodes \n", mPath_L.size() );
+	printf("** Shortening Right Arm plan ** \n");
+	PathShortener ps2( world, mRobotId, mRA_Links );
+	ps2.shortenPath( mPath_R );
+	printf( "** Shortened path with %d nodes \n", mPath_R.size() );
+      }
     } else {
       printf( " ** Did not find a path for both arms ** \n" );
     }
