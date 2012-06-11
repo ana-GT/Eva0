@@ -77,6 +77,8 @@ public:
   void OnRadio( wxCommandEvent &_evt );
   void OnButton( wxCommandEvent &_evt );
   void ExecutePath( );
+  void HomogenizePath( std::list<Eigen::VectorXd> _inputPath,
+		       std::list<Eigen::VectorXd> &_outputPath );
   
   void RSTStateChange();
   
@@ -97,6 +99,7 @@ public:
   Eigen::VectorXd mTargetConf_L;
 
   PathPlanner<RRT> *mPPa;
+  double mStepSize;
 
   int mRobotId;
   int mEEId; 

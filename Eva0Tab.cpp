@@ -343,16 +343,20 @@ void Eva0Tab::ExecutePath() {
 
   switch( mConfMode ) {
     
+    /** LEFT ARM */
   case LEFT_ARM: {
     _links = mLA_Links;
-    _path = mPath_L;
-  } break;
+    HomogenizePath( mPath_L, _path );
     
-  case RIGHT_ARM: {
-    _links = mRA_Links;
-    _path = mPath_R;
   } break;
 
+    /** RIGHT ARM */
+  case RIGHT_ARM: {
+    _links = mRA_Links;
+    HomogenizePath( mPath_R, _path );
+  } break;
+
+    /** BOTH ARMS */
   case BOTH_ARMS: {
 
     int pm, pM, lm, lM;
@@ -360,16 +364,20 @@ void Eva0Tab::ExecutePath() {
     std::list<Eigen::VectorXd> pathM;
 
     if( mPath_L.size() < mPath_R.size() ) {
-      pathm = mPath_L; pathM = mPath_R;
-      pm = mPath_L.size(); pM = mPath_R.size();
+      HomogenizePath( mPath_L, pathm );
+      HomogenizePath( mPath_R, pathM );
+      pm = pathm.size(); pM = pathM.size();
+
       lm = mLA_Links.size(); lM = mRA_Links.size();
 
       _links = mLA_Links;
       _links.insert( _links.end(), mRA_Links.begin(), mRA_Links.end() );
 
     } else {
-      pathm = mPath_R; pathM = mPath_L;
-      pm = mPath_R.size(); pM = mPath_L.size();
+      HomogenizePath( mPath_R, pathm );
+      HomogenizePath( mPath_L, pathM );
+      pm = pathm.size(); pM = pathM.size();
+
       lm = mRA_Links.size(); lM = mLA_Links.size();
 
       _links = mRA_Links;
@@ -416,7 +424,9 @@ void Eva0Tab::ExecutePath() {
 
   } // end of mConfMode switch
 
+
   /** Execution **/
+	
   if( _path.size() == 0 ) {
     std::cout << "** (!) Must create a valid plan first (!)" << std::endl;
     return;
@@ -435,7 +445,7 @@ void Eva0Tab::ExecutePath() {
     world->robots[mRobotId]->setConf( _links,  *it );
     frame->AddWorld( world );
   }
-  
+	
 }
 
 
@@ -443,4 +453,35 @@ void Eva0Tab::ExecutePath() {
  * @function RSTStateChange
  */
 void Eva0Tab::RSTStateChange() {
+}
+
+/**
+ * @function HomogenizePath
+ */
+void Eva0Tab::HomogenizePath( std::list<Eigen::VectorXd> _inputPath,
+			      std::list<Eigen::VectorXd> &_outputPath ) {
+ 
+  mStepSize = 0.1; // ~5 degrees
+
+  _outputPath.resize(0);
+
+  double i = 0.0;
+  std::list<Eigen::VectorXd>::iterator config1 = _inputPath.begin();
+  std::list<Eigen::VectorXd>::iterator config2 = config1;
+  config2++;
+
+  while(config2 != _inputPath.end()) {
+    Eigen::VectorXd direction = (*config2 - *config1).normalized();
+    double distance = (*config2 - *config1).norm();
+    while(i < distance) {
+      VectorXd config = *config1 + i * direction;
+      _outputPath.push_back( config );
+      i += mStepSize;
+    }
+    i -= distance;
+    config1++;
+    config2++;
+  }
+
+  _outputPath.push_back( *config1 );
 }
