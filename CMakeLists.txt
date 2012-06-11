@@ -5,7 +5,7 @@ include_directories( /home/humanoids/Software/rst /home/humanoids/Software/rst/l
 
 set ( CMAKE_CXX_FLAGS "-L /home/humanoids/Software/rst/librst" )
 
-set ( SRC_TAB_SIMULATION Eva0Tab Eva0TabApp )
+set ( SRC_TAB_SIMULATION Eva0Tab Eva0TabApp Eva0Plan )
 
 set (wxWidgets_USE_LIBS base core gl)
 find_package (wxWidgets)

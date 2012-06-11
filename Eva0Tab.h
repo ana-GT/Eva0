@@ -46,6 +46,11 @@
 #include <Tools/Object.h>
 #include <Tools/Constants.h>
 
+#include <Tools/PathPlanner.h>
+
+#include <Eigen/Core>
+#include <list>
+
 /**
  * @class Eva0Tab
  * @brief Test Class to show off Golem
@@ -54,16 +59,24 @@ class Eva0Tab : public RSTTab
 {
 public:
 
+  enum eConfMode {
+    BOTH_ARMS,
+    LEFT_ARM,
+    RIGHT_ARM
+  };
+
   Eva0Tab(){};
   Eva0Tab(wxWindow * parent, wxWindowID id = -1,
 	  const wxPoint & pos = wxDefaultPosition,
 	  const wxSize & size = wxDefaultSize,
 	  long style = wxTAB_TRAVERSAL);
-  virtual ~Eva0Tab(){}
+  virtual ~Eva0Tab();
   
   bool Initialize();
+  bool ArmPlanning();
   void OnRadio( wxCommandEvent &_evt );
   void OnButton( wxCommandEvent &_evt );
+  void ExecutePath( );
   
   void RSTStateChange();
   
@@ -83,6 +96,8 @@ public:
   Eigen::VectorXd mStartConf_L;
   Eigen::VectorXd mTargetConf_L;
 
+  PathPlanner<RRT> *mPPa;
+
   int mRobotId;
   int mEEId; 
   std::string mRobotName;
@@ -91,6 +106,10 @@ public:
   std::vector<int> mRA_Links;
   std::vector<int> mRH_Links;
   int mBase_Link;
+  eConfMode mConfMode;
+
+  std::list<Eigen::VectorXd> mPath_R;
+  std::list<Eigen::VectorXd> mPath_L;
 
   DECLARE_DYNAMIC_CLASS(Eva0Tab)
     DECLARE_EVENT_TABLE()

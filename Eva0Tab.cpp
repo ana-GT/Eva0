@@ -162,6 +162,16 @@ Eva0Tab::Eva0Tab(wxWindow *parent,
   SetSizer( Eva0TabSizer );  
 }
 
+/**
+ * @function ~Eva0Tab
+ */
+Eva0Tab::~Eva0Tab() {
+  if( mPPa != NULL ) {
+    delete mPPa;
+  }
+
+}
+
 
 /**
  * @function Initialize
@@ -197,6 +207,21 @@ bool Eva0Tab::Initialize() {
  * @function OnRadio
  */
 void Eva0Tab::OnRadio( wxCommandEvent &_evt ) {
+
+  int num = _evt.GetSelection();
+  
+  if( num == 0 ) {
+    mConfMode = BOTH_ARMS;
+    std::cout << "** Planning for both arms" << std::endl; 
+  }
+  else if( num == 1 ) {
+    mConfMode = LEFT_ARM;
+    std::cout << "** Planning for left arm only " << std::endl;
+  }
+  else if( num == 2 ) {
+    mConfMode = RIGHT_ARM;
+    std::cout << "-- Planning for right arm only" << std::endl;
+  }
 }
 
 /**
@@ -293,14 +318,124 @@ void Eva0Tab::OnButton( wxCommandEvent &_evt ) {
     viewer->UpdateCamera();
   } break;
 
-  case button_Plan: {
+    /** Plan */
+  case button_Plan: {    
+    ArmPlanning();
   } break;
 
+    /** Execute */
   case button_Execute: {
+
+    ExecutePath();
   } break;
     
+  } // end of button switch
+
+}
+
+/**
+ * @function ExecutePath
+ */
+void Eva0Tab::ExecutePath() {
+
+  std::vector<int> _links;
+  std::list<Eigen::VectorXd> _path;
+
+  switch( mConfMode ) {
+    
+  case LEFT_ARM: {
+    _links = mLA_Links;
+    _path = mPath_L;
+  } break;
+    
+  case RIGHT_ARM: {
+    _links = mRA_Links;
+    _path = mPath_R;
+  } break;
+
+  case BOTH_ARMS: {
+
+    int pm, pM, lm, lM;
+    std::list<Eigen::VectorXd> pathm; 
+    std::list<Eigen::VectorXd> pathM;
+
+    if( mPath_L.size() < mPath_R.size() ) {
+      pathm = mPath_L; pathM = mPath_R;
+      pm = mPath_L.size(); pM = mPath_R.size();
+      lm = mLA_Links.size(); lM = mRA_Links.size();
+
+      _links = mLA_Links;
+      _links.insert( _links.end(), mRA_Links.begin(), mRA_Links.end() );
+
+    } else {
+      pathm = mPath_R; pathM = mPath_L;
+      pm = mPath_R.size(); pM = mPath_L.size();
+      lm = mRA_Links.size(); lM = mLA_Links.size();
+
+      _links = mRA_Links;
+      _links.insert( _links.end(), mLA_Links.begin(), mLA_Links.end() );
+    }
+
+    std::list<Eigen::VectorXd>::iterator itm = pathm.begin();
+    std::list<Eigen::VectorXd>::iterator itM = pathM.begin();
+
+    for( size_t i = 0; i < pm; ++i ) {
+
+      Eigen::VectorXd conf(lm + lM);
+
+      for( size_t j = 0; j < lm; ++j ) {
+	conf[j] = (*itm)(j);
+      }  
+      for( size_t j = 0; j < lM; ++j ) {
+	conf[j+lm] = (*itM)(j);
+      }
+
+      _path.push_back( conf );
+      itm++;
+      itM++;
+    }
+
+    itm--; // it ended in end()
+
+    for( size_t i = pm; i < pM; ++i ) {
+
+      Eigen::VectorXd conf(lm + lM);
+
+      for( size_t j = 0; j < lm; ++j ) {
+	conf[j] = (*itm)(j);
+      }  
+      for( size_t j = 0; j < lM; ++j ) {
+	conf[j+lm] = (*itM)(j);
+      }
+
+      _path.push_back( conf );
+      itM++;
+    }
+
+  } break;
+
+  } // end of mConfMode switch
+
+  /** Execution **/
+  if( _path.size() == 0 ) {
+    std::cout << "** (!) Must create a valid plan first (!)" << std::endl;
+    return;
   }
 
+  int numsteps = _path.size();
+  double increment = 5.0 / numsteps;
+
+  std::cout << "-->(+) Updating Timeline -- Steps: " << numsteps << endl;
+  
+  frame->InitTimer( string("Plan"),increment );
+  
+  Eigen::VectorXd vals( _links.size() );
+  
+  for( std::list<Eigen::VectorXd>::iterator it = _path.begin(); it != _path.end(); it++ ) {
+    world->robots[mRobotId]->setConf( _links,  *it );
+    frame->AddWorld( world );
+  }
+  
 }
 
 
